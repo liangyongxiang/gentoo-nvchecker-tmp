@@ -1,0 +1,35 @@
+name: 'gentoo overlay version dump'
+inputs:
+  configfile:
+    description: 'configuraction file'
+    required: true
+  github_token:
+    description: 'github token'
+    required: false
+  emerge_default_opts:
+    description: 'defalut emerge opts'
+    required: false
+    default: '--verbose --autounmask-continue y'
+  portage_tmpdir:
+    description: 'global portage tmpdir'
+    default: '/var/tmp'
+    required: false
+  accept_keywords:
+    description: 'global accept keywords'
+    default: '~amd64'
+    required: false
+  accept_license:
+    description: 'global accept license'
+    default: '*'
+    required: false
+  features:
+    description: 'global features'
+    default: '-ipc-sandbox -network-sandbox -pid-sandbox'  # 680456
+    required: false
+outputs:
+  bumps:
+    description: 'upgradable packages'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
