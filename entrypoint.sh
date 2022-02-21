@@ -24,7 +24,7 @@ echo "::endgroup::"
 echo "::group::update main tree and install depends"
 emerge-webrsync
 eselect news read all > /dev/null
-emerge app-eselect/eselect-repository app-portage/eix dev-python/pip
+emerge app-eselect/eselect-repository app-portage/eix dev-python/pip app-portage/portage-utils dev-vcs/git
 echo "::endgroup::"
 
 echo "::group::overlay sync"
@@ -41,8 +41,11 @@ echo "::endgroup::"
 
 echo "::group::package version"
 eix-update
-EIX_LIMIT=0 eix -# --in-overlay "$repo_name" | grep -Ev '(acct-group|acct-user|virtual)/' > pkgs.txt
-/usr/local/bin/old_ver 'pkgs.txt' 'old_ver.json'
+pkgs=$(EIX_LIMIT=0 NAMEVERSION="<category>/<name>-<version>\n" eix --pure-packages --in-overlay gentoo-zh --format '<bestversion:NAMEVERSION>')
+pkgs=$(qatom -F "\"%{PN}\": \"%{PV}\"," $pkgs) # remove revision
+pkgs="{ ${pkgs::-1} }"
+echo "$pkgs" | hexdump -C
+echo "$pkgs" > old_ver.json
 echo "::endgroup::"
 
 echo "::group::nvchecker"
