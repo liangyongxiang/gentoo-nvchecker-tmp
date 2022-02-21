@@ -2,14 +2,13 @@
 
 set -xeuo pipefail
 
-env
+export PATH="/root/.local/bin:$PATH"
+export PATH="/github/home/.local/bin:$PATH"
 
 proc_num=$(nproc)
 
-echo "::group::configfile"
+echo "::group::prepare"
 echo -e "[keys]\ngithub = \"${INPUT_GITHUB_TOKEN}\"" > keyfile.toml
-echo "::endgroup::"
-
 echo "::group::update make.conf"
 cat <<EOT >> /etc/portage/make.conf
 EMERGE_DEFAULT_OPTS="${INPUT_EMERGE_DEFAULT_OPTS} --jobs $proc_num --load-average $proc_num"
@@ -22,17 +21,10 @@ EOT
 cat /etc/portage/make.conf
 echo "::endgroup::"
 
-echo "::group::overlay prepare"
+echo "::group::update main tree and install depends"
 emerge-webrsync
 eselect news read all > /dev/null
-emerge app-eselect/eselect-repository app-portage/gentoolkit dev-vcs/git app-portage/eix dev-python/pip
-echo "::endgroup::"
-
-echo "::group::nvchecker"
-pip install --user nvchecker
-export PATH="/root/.local/bin:$PATH"
-export PATH="/github/home/.local/bin:$PATH"
-nvchecker --version
+emerge app-eselect/eselect-repository app-portage/eix dev-python/pip
 echo "::endgroup::"
 
 echo "::group::overlay sync"
@@ -42,10 +34,15 @@ emerge --sync $repo_name
 egencache --jobs=$proc_num --update --repo $repo_name
 echo "::endgroup::"
 
+echo "::group::install nvchecker"
+pip install --user nvchecker
+nvchecker --version
+echo "::endgroup::"
+
 echo "::group::package version"
 eix-update
 EIX_LIMIT=0 eix -# --in-overlay "$repo_name" | grep -Ev '(acct-group|acct-user|virtual)/' > pkgs.txt
-/usr/local/bin/old_ver
+/usr/local/bin/old_ver 'pkgs.txt' 'old_ver.json'
 echo "::endgroup::"
 
 echo "::group::nvchecker"
