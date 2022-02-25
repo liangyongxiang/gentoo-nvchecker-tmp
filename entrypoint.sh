@@ -41,7 +41,7 @@ echo "::endgroup::"
 
 echo "::group::package version"
 eix-update
-pkgs=$(EIX_LIMIT=0 NAMEVERSION="<category>/<name>-<version>\n" eix --pure-packages --in-overlay gentoo-zh --format '<bestversion:NAMEVERSION>')
+pkgs=$(EIX_LIMIT=0 NAMEVERSION="<category>/<name>-<version>\n" eix --pure-packages --in-overlay "$repo_name" --format '<bestversion:NAMEVERSION>')
 pkgs=$(qatom -F "\"%{PN}\": \"%{PV}\"," $pkgs) # remove revision
 pkgs="{ ${pkgs::-1} }"
 echo "$pkgs" | hexdump -C
