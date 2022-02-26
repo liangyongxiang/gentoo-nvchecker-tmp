@@ -1,4 +1,4 @@
-FROM liangyongxiang/gentoo-testing
+FROM ghcr.io/liangyongxiang/gentoo-testing
 
 COPY entrypoint.sh /entrypoint.sh
 
