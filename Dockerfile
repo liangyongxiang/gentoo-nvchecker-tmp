@@ -1,4 +1,4 @@
-FROM gentoo/stage3:desktop
+FROM liangyongxiang/gentoo-testing
 
 COPY entrypoint.sh /entrypoint.sh
 

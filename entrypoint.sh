@@ -2,45 +2,15 @@
 
 set -xeuo pipefail
 
-export PATH="/root/.local/bin:$PATH"
-export PATH="/github/home/.local/bin:$PATH"
-
-proc_num=$(nproc)
-
-echo "::group::prepare"
-echo -e "[keys]\ngithub = \"${INPUT_GITHUB_TOKEN}\"" > keyfile.toml
-echo "::group::update make.conf"
-cat <<EOT >> /etc/portage/make.conf
-EMERGE_DEFAULT_OPTS="${INPUT_EMERGE_DEFAULT_OPTS} --jobs $proc_num --load-average $proc_num"
-MAKEOPTS="-j$proc_num"
-PORTAGE_TMPDIR="${INPUT_PORTAGE_TMPDIR}"
-FEATURES="${INPUT_FEATURES}"
-ACCEPT_KEYWORDS="${INPUT_ACCEPT_KEYWORDS}"
-ACCEPT_LICENSE="${INPUT_ACCEPT_LICENSE}"
-EOT
-cat /etc/portage/make.conf
-echo "::endgroup::"
-
-echo "::group::update main tree and install depends"
-emerge-webrsync
-eselect news read all > /dev/null
-emerge app-eselect/eselect-repository app-portage/eix dev-python/pip app-portage/portage-utils dev-vcs/git
-echo "::endgroup::"
 
 echo "::group::overlay sync"
 repo_name=$(cat "${GITHUB_WORKSPACE}/profiles/repo_name")
 eselect repository add $repo_name git "file://${GITHUB_WORKSPACE}"
 emerge --sync $repo_name
-egencache --jobs=$proc_num --update --repo $repo_name
-echo "::endgroup::"
-
-echo "::group::install nvchecker"
-pip install --user nvchecker
-nvchecker --version
+eix-update
 echo "::endgroup::"
 
 echo "::group::package version"
-eix-update
 pkgs=$(EIX_LIMIT=0 NAMEVERSION="<category>/<name>-<version>\n" eix --pure-packages --in-overlay "$repo_name" --format '<bestversion:NAMEVERSION>')
 pkgs=$(qatom -F "\"%{PN}\": \"%{PV}\"," $pkgs) # remove revision
 pkgs="{ ${pkgs::-1} }"
